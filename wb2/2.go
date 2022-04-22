@@ -1,30 +1,28 @@
 package main
 
-import "fmt"
-
-var array = []int{2, 4, 6, 8, 10}
-
-// функция squares
-func Squares(c chan int) {
-	// перебираем - перемножаем и отправляем в канал значения
-	for _, value := range array {
-		c <- value * value
-	}
-
-	// закрываем канал
-	close(c)
-}
+import (
+	"fmt"
+	"sync"
+)
 
 func main() {
+	// Создание группы контроля исполниеия горутин похоже на СЕМАФОР
+	var wg sync.WaitGroup
+	// Массив
+	arr := []int{2, 4, 6, 8, 10}
 
-	fmt.Printf("Запустить массив: %v\n", array)
-
-	// создаем канал, который принимает только целочисленные значения
-	// запускаем горутину
-	c := make(chan int)
-	go Squares(c)
-
-	for v := range c {
-		fmt.Println("Значение в квадрате: ", v)
+	// увеличиваем на длинну переменной arr
+	wg.Add(len(arr))
+	// Запускаем 5 горутин
+	for _, e := range arr {
+		//способ запуска горутины в анонимной функции
+		go func(wg *sync.WaitGroup, e int) {
+			fmt.Println(e * e)
+			//после завершения исполниия горутины мы уменьшим значение группы на 1
+			defer wg.Done()
+		}(&wg, e)
 	}
+	//будем ждать пока в группе не будет нуля
+	wg.Wait()
+	fmt.Println("Ops... End")
 }

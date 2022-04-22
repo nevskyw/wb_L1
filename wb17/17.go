@@ -8,7 +8,7 @@ import "fmt"
 func main() {
 	items := []int{1, 2, 9, 20, 31, 45, 63, 70, 100}
 
-	fmt.Println(binarySearch(63, items)) // Число и слайс в котором будем искать
+	fmt.Println(binarySearch(63, items)) // Число и срез в котором будем искать
 }
 
 func binarySearch(num int, newSlice []int) bool {

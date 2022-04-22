@@ -1,29 +1,38 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
-var array = []int{2, 4, 6, 8, 10}
-
-// функция squares
-func Squares(c chan int) {
-	// перебираем - перемножаем и отправляем в канал значения
-	for _, value := range array {
-		c <- value * value
-	}
-
-	// закрываем канал
-	close(c)
+//реализация мьютекса внутри структуры которую
+//впоследствии будут использовать несколько горутин
+type Summ struct {
+	//композиция метода блокировки замка
+	sync.Mutex
+	//композиция типа
+	int
 }
 
 func main() {
+	var wg sync.WaitGroup
 
-	fmt.Printf("Запустить массив: %v\n", array)
+	arr := []int{2, 4, 6, 8, 10}
+	wg.Add(len(arr))
 
-	// создаем канал, который принимает только целочисленные значения
-	c := make(chan int)
-	go Squares(c)
-
-	for v := range c {
-		fmt.Println("Значение в квадрате: ", v)
+	var sum Summ
+	for _, e := range arr {
+		go func(e int, sum *Summ) {
+			//все очень похоже на предыдущий номер
+			// только здесь для избежания проблемы гонки
+			// используется мьютекс, причем тот, тот который блокирует как
+			// чтение так и запись
+			sum.Lock()
+			sum.int += e * e
+			sum.Unlock()
+			defer wg.Done()
+		}(e, &sum)
 	}
+	wg.Wait()
+	fmt.Println(sum.int)
 }

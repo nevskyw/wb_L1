@@ -8,14 +8,13 @@ import (
 func main() {
 	dataMap := make(map[int]int64)
 
-	// Не смог додуматься, как сканировать сразу в карту, пришлось добавить эту переменную
-	var helpScan int64
+	var Scan int64
 
 	// Заполняем карту введенными данными с клавиатуры, присваивая i в качестве ключа
 	for i := 0; i < 3; i++ {
 		_, err := fmt.Scan(dataMap[i])
 		checkError(err)
-		dataMap[i] = helpScan
+		dataMap[i] = Scan
 	}
 
 	fmt.Println(strconv.FormatInt(dataMap[0], 2))

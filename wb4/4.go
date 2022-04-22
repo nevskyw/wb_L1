@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -11,94 +10,46 @@ import (
 	"time"
 )
 
-//просто сложили все в одно место
-type JobOffer struct {
-	//основной канал «задач» для чтения
-	mch chan interface{}
-	//группа ожидания
-	sync.WaitGroup
-	//канал ожидания выхода
-	quit chan struct{}
-}
-
-//функция инициализации всех переменных
-func initwork(jo *JobOffer, n *int) bool {
-
-	fmt.Print("Write number of workers: ")
-	fmt.Scan(n)
-
-	//проверка на натуральность
-	if *n <= 0 {
-		return false
+func Worker(mainChan chan interface{}, n int, wg *sync.WaitGroup) {
+	for data := range mainChan {
+		time.Sleep(time.Second)
+		fmt.Printf("Worker #%d doing %v\n", n, data)
 	}
-
-	//создание каналов
-	jo.mch = make(chan interface{})
-	jo.quit = make(chan struct{})
-	return true
-}
-
-func work(jo *JobOffer, n int) {
-	// каждый работник увеличивает группу ожидания на 1 (на одного себя)
-	jo.Add(1)
-
-	//инициализация переменной для получения в нее любого типа данных
-	var task interface{}
-	for {
-		//селект позволяет выполнять участок кода в завоимости от канала который
-		// получит значение первым
-		select {
-		// если повилась новая задача в списке задач
-		case task = <-jo.mch:
-			log.Println("Worker #", n, task)
-			//тру рандом
-			rand.Seed(time.Now().UnixNano())
-			//делаем вид что у нас сложный процесс, который занимает время
-			time.Sleep(time.Duration(rand.Intn(4)+1) * time.Second)
-		// если произошло прерывание
-		case <-jo.quit:
-			jo.Done()
-			log.Println("#", n, "-- Ok, sir!")
-			return
-		}
-	}
-
+	wg.Done() //
 }
 
 func main() {
-	var jo JobOffer
-	var n int
-	//создаем канал для получения сигналов
-	sigs := make(chan os.Signal, 1)
-	// сигналов о прерывании или о вмешивании
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	if initwork(&jo, &n) == false {
-		return
-	}
+	tasks := [...]interface{}{"aaaaa", "bbbbb", 'Q', true} // массив типа interface{}
+	mainChan := make(chan interface{})                     // создаем канал типа interface{} куда мы передаем любой список задач
 
-	//зщапуск работников
-	for n > 0 {
-		go work(&jo, n)
+	wg := &sync.WaitGroup{}            // создаем группу ожидания
+	sigChan := make(chan os.Signal, 1) // буф
+	
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	//quitChan := make(chan struct{})
+
+	rand.Seed(time.Now().UnixNano())
+
+	fmt.Print("Nu of workers: ")
+	var n int
+	fmt.Scan(&n)
+
+	for n != 0 {
+		wg.Add(1)
+		go Worker(mainChan, n, wg)
 		n--
 	}
-	// массив типа интерфейс
-	tasks := [6]interface{}{"poopin'", "kweelin'", "yahoin'", "selebraitin'", "snifin' around", "smilin'"}
-	// тут без комментариев
+
 	for {
 		select {
-		//ситуация — всё кроме момента получеия данных  в канал с сигналами
 		default:
-			
-			rand.Seed(time.Now().UnixNano()) // рандоммные числа на основе того, что каждый раз генерирует разное Unix
-			jo.mch <- tasks[rand.Intn(len(tasks))] // рандом от 0 до n (длинны этого массива)
-		// прерывание или прекращение работы
-		case <-sigs:
-			//закрываем канал
-			close(jo.quit)
-			log.Println("-- Stop workin', you fools!")
-			// ждем когда все работники перестанут работать
-			jo.Wait()
-			return
+			mainChan <- tasks[rand.Intn(len(tasks))]
+		case <-sigChan:
+			close(mainChan)
+			wg.Wait()
+			return //os.Exit(0)
 		}
 	}
+	// fmt.Println(time.Now().UnixNano())
 }

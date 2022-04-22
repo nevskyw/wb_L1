@@ -22,21 +22,23 @@ func main() {
 			age:  22,
 		},
 	}
-	// теперь можно обращаться конкретно к `one`и вытаскивать значения
-	one.email = "yana.yzndex.ru"
-	one.phone = "+7-999-006-55-55"
 
 	fmt.Println(one)
-	fmt.Println(one.email)
-	fmt.Println(one.phone)
-
-	// более упрощенная запись 2-го пользователя
-	two := Human{"Sanya", 15}
-	act := Action{"sanya.mail.ru", "+7-999-555-55-59", two}
-
-	fmt.Println(two)
-	fmt.Println(act)
 }
+
+// // теперь можно обращаться конкретно к `one`и вытаскивать значения
+// one.email = "yana.yzndex.ru"
+// one.phone = "+7-999-006-55-55"
+
+// fmt.Println(one.email)
+// fmt.Println(one.phone)
+
+// // более упрощенная запись 2-го пользователя
+// two := Human{"Sanya", 15}
+// act := Action{"sanya.mail.ru", "+7-999-555-55-59", two}
+
+// fmt.Println(two)
+// fmt.Println(act)
 
 /*
 
